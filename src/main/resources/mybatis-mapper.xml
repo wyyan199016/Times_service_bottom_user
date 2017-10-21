@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.stonecode.database.StoneMapper">
+	
+    <select id="login" parameterType="java.util.Map" resultType="java.util.Map">
+ 	  select * from stone_user where status=1 and password=#{password} and (email=#{username} or mobile=#{username})
+    </select>
+    <insert id="register" parameterType="java.util.Map">
+	   insert into stone_user(userid,email,mobile,password,status,crtime) VALUES(#{userid},#{email},#{mobile},#{password},1,now())
+    </insert>
+    <select id="exist_userid" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from stone_user where userid=#{username}
+    </select>
+    <select id="exist_email" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from stone_user where email=#{username}
+    </select>
+    <select id="exist_mobile" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from stone_user where mobile=#{username}
+    </select>
+    <update id="resetpassword_email" parameterType="java.util.Map">
+        update stone_user_user set password =#{password} where email=#{username}
+    </update>
+    <update id="resetpassword_mobile" parameterType="java.util.Map">
+        update stone_user_user set password =#{password} where email=#{username}
+    </update>
+    
+	<select id="getUserInfo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+ 	  select userid,email,mobile,status,crtime from stone_user where 1=1 and (email=#{username} or mobile=#{username})
+    </select>
+    
+    <!-- project -->
+    <select id="getProjectList" parameterType="java.util.Map" resultType="java.util.Map">
+ 	  select pid,title,introduce,keyword,price,cruser,crtime from stone_project_list where enable=1 order by crtime desc limit ${offset},${pageSize}
+    </select>
+    <select id="getProjectListCount" resultType="java.lang.Integer">
+ 	  	select count(*) from stone_project_list where enable=1
+    </select>
+    <select id="getProjectDetail" parameterType="java.util.Map" resultType="java.util.Map">
+ 	    select list.title,list.introduce,list.keyword,list.price,list.cruser,list.crtime,detail.*, case when c.cou is null then 0 else c.cou end as cou 
+		from stone_project_list list left join stone_project_detail detail on detail.pid=list.pid
+		left join (select count(*) cou,pid from stone_project_click_log where pid=#{pid}) c on c.pid=list.pid
+		where list.pid=#{pid} order by list.crtime desc
+    </select>
+    <select id="getProjectVideos" parameterType="java.util.Map" resultType="java.util.Map">
+ 	    select list.title,list.price,video.vid,video.pid,video.title vtitle,video.url
+		from stone_project_list list left join stone_project_video video on video.pid=list.pid
+		where list.pid=#{pid} order by video.order
+    </select>
+    <insert id="addProjectClickLog" parameterType="java.util.Map">
+        insert into stone_project_click_log(id,pid,crtime) values(#{id},#{pid},NOW())
+    </insert>
+    <insert id="addProjectComment" parameterType="java.util.Map">
+        insert into stone_project_comment(cid,pid,content,cruser,crtime) values(#{cid},#{pid},#{content},#{cruser},NOW())
+    </insert>
+    <select id="getProjectComment" parameterType="java.util.Map" resultType="java.util.Map">
+ 	  	select spc.*,suu.email from stone_project_comment spc left join stone_user_user suu on suu.userid=spc.cruser
+		where spc.pid=#{pid} order by spc.crtime desc limit ${offset},${pageSize}
+    </select>
+    
+    
+    
+</mapper>
